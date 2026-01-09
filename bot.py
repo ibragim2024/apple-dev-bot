@@ -1,8 +1,9 @@
 import asyncio
 import os
-from aiogram import Bot, Dispatcher, F
-from aiogram.filters import CommandStart
-from aiogram.types import Message
+from aiogram import Bot, Dispatcher
+from aiogram.filters import CommandStart, Text
+from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
+from payments import create_payment  # импортируем функцию создания платежа
 
 TOKEN = os.getenv("BOT_TOKEN")
 
@@ -19,7 +20,7 @@ async def main():
         resize_keyboard=True
     )
 
-    # При старте бота
+    # Обработчик команды /start
     @dp.message(CommandStart())
     async def start(message: Message):
         await message.answer(
@@ -29,23 +30,22 @@ async def main():
             reply_markup=keyboard
         )
 
-    # Кнопка "Купить сертификат"
-    @dp.message(F.text.in_(["1", "2", "3", "4", "5"]))
-async def choose_cert(message: Message):
-    choices = {
-        "1": "🔹 Обычный — 250₽ (3 дня)\n❌ Без гарантии",
-        "2": "🔹 Super обычный — 350₽ (3 дня)\n✅ Гарантия 1 месяц",
-        "3": "🍎 Мгновенный — 500₽ (10 мин)\n❌ Без гарантии",
-        "4": "⚡ Super мгновенный — 700₽ (10 мин)\n✅ Гарантия 1 месяц",
-        "5": "🍎 Ultra — 2000₽ (10 мин)\n✅ Гарантия 1 ГОД"
-    }
+    # Обработка выбора сертификатов
+    @dp.message(Text(equals="🛒 Купить сертификат"))
+    async def buy(message: Message):
+        await message.answer(
+            "📦 *Доступные сертификаты:*\n\n"
+            "🔹 1. Обычный — 250₽ (3 дня)\n❌ без гарантии\n\n"
+            "🔹 2. Super обычный — 350₽ (3 дня)\n✅ гарантия 1 месяц\n\n"
+            "🍎 3. Мгновенный — 500₽ (10 мин)\n❌ без гарантии\n\n"
+            "⚡ 4. Super мгновенный — 700₽ (10 мин)\n✅ гарантия 1 месяц\n\n"
+            "🍎 5. Ultra мгновенный — 2000₽ (10 мин)\n✅ гарантия 1 ГОД\n\n"
+            "👉 Напишите номер варианта (1–5)",
+            parse_mode="Markdown"
+        )
 
-    await message.answer(
-        f"✅ Вы выбрали:\n\n{choices[message.text]}\n\n"
-        "Напишите `да` для подтверждения или `нет` для отмены."
-    )
     # Обрабатываем цифры 1–5
-    @dp.message(F.text.in_(["1", "2", "3", "4", "5"]))
+    @dp.message(Text(equals=["1", "2", "3", "4", "5"]))
     async def choose_certificate(message: Message):
         choice = message.text
         if choice == "1":
@@ -79,7 +79,7 @@ async def choose_cert(message: Message):
         await message.answer(response + f"\n\n👉 Перейдите по ссылке для оплаты: {payment_url}", reply_markup=confirmation_keyboard)
 
     # Кнопка "Назад"
-    @dp.message(lambda message: message.text == "🔙 Назад к выбору")
+    @dp.message(Text(equals="🔙 Назад к выбору"))
     async def back_to_choice(message: Message):
         await message.answer(
             "📦 *Доступные сертификаты:*\n\n"
@@ -93,7 +93,7 @@ async def choose_cert(message: Message):
         )
 
     # Кнопка "Продолжить оплату"
-    @dp.message(lambda message: message.text == "✅ Продолжить оплату")
+    @dp.message(Text(equals="✅ Продолжить оплату"))
     async def continue_payment(message: Message):
         await message.answer(
             "💳 Для завершения покупки — выберите способ оплаты."
