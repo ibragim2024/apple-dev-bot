@@ -1,13 +1,16 @@
 import asyncio
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import (
+    ReplyKeyboardMarkup, KeyboardButton,
+    InlineKeyboardMarkup, InlineKeyboardButton
+)
 import uuid
 
 # ================= НАСТРОЙКИ =================
 BOT_TOKEN = "7989675191:AAFnkhfIaZRrDh4LBIpYyZkoYTQOmzgrRso"
 
-ADMIN_ID = 7621656595  # <-- ВСТАВЬ СВОЙ TELEGRAM ID (цифры)
+ADMIN_ID = 7621656595  # <-- ТВОЙ TELEGRAM ID
 ADMIN_USERNAME = "@Ibracc7"
 
 CARD_TEXT = (
@@ -16,6 +19,18 @@ CARD_TEXT = (
     "🏦 *СБП:* Альфа-Банк\n"
     "📱 *Телефон:* `+7 993 777-71-28`\n\n"
     "📸 После оплаты нажмите «💳 Я оплатил» и отправьте скриншот"
+)
+
+UDID_INSTRUCTION = (
+    "📱 *Отправьте ваш UDID*\n\n"
+    "🔹 *Способ 1 (самый простой):*\n"
+    "1️⃣ Перейдите на сайт 👉 https://udid.tech\n"
+    "2️⃣ Нажмите *Get UDID*\n"
+    "3️⃣ Разрешите установку профиля\n"
+    "4️⃣ Скопируйте UDID и отправьте сюда\n\n"
+    "🎥 *Видео-инструкция:*\n"
+    "https://youtu.be/9zE0s9GJ7bA\n\n"
+    "⚠️ Отправляйте *ТОЛЬКО UDID* (буквы и цифры)"
 )
 
 bot = Bot(token=BOT_TOKEN, parse_mode="Markdown")
@@ -80,68 +95,71 @@ async def wait_screenshot(message: types.Message):
         "⚠️ Принимаются только изображения."
     )
 
-# ====== ПРИЁМ СКРИНШОТА ======
+# ================= ПРИЁМ СКРИНА =================
 @dp.message(lambda m: m.photo)
 async def receive_screenshot(message: types.Message):
     user = message.from_user
     photo_id = message.photo[-1].file_id
+    payment_id = uuid.uuid4()
 
     caption = (
-        "💰 *СКРИНШОТ ОПЛАТЫ*\n\n"
-        f"👤 Пользователь: @{user.username or 'без username'}\n"
+        "💰 *НОВАЯ ОПЛАТА*\n\n"
+        f"👤 @{user.username or 'без username'}\n"
         f"🆔 ID: {user.id}\n"
         f"📛 Имя: {user.full_name}"
     )
 
-    # Сохраняем ID оплаты, чтобы админ мог подтвердить или отклонить
-    payment_id = uuid.uuid4()
-
     await bot.send_photo(
-        chat_id=ADMIN_ID,
-        photo=photo_id,
+        ADMIN_ID,
+        photo_id,
         caption=caption,
-        reply_markup=InlineKeyboardMarkup().add(
-            InlineKeyboardButton("✅ Подтвердить", callback_data=f"confirm_{payment_id}")
-        ).add(
-            InlineKeyboardButton("❌ Отклонить", callback_data=f"reject_{payment_id}")
-        )
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="✅ Подтвердить",
+                    callback_data=f"confirm_{user.id}"
+                )
+            ]
+        ])
     )
 
     await message.answer(
         "✅ *Скриншот получен!*\n\n"
-        "Администратор проверит оплату и свяжется с вами 👌"
+        "После проверки вам нужно будет отправить UDID."
     )
 
-# ====== ОБРАБОТЧИКИ ДЛЯ ПОДТВЕРЖДЕНИЯ ОПЛАТЫ ======
-@dp.callback_query(lambda c: c.data.startswith('confirm_'))
-async def confirm_payment(callback_query: types.CallbackQuery):
-    payment_id = callback_query.data.split('_')[1]
-    await bot.answer_callback_query(callback_query.id)
-    
-    await bot.send_message(
-        callback_query.from_user.id,
-        f"✅ Оплата с ID {payment_id} подтверждена! Ожидайте получения сертификата."
-    )
+# ================= ПОДТВЕРЖДЕНИЕ =================
+@dp.callback_query(lambda c: c.data.startswith("confirm_"))
+async def confirm_payment(callback: types.CallbackQuery):
+    user_id = int(callback.data.split("_")[1])
 
-    await bot.send_message(
-        ADMIN_ID,
-        f"✅ Оплата с ID {payment_id} подтверждена."
-    )
+    await bot.send_message(user_id, UDID_INSTRUCTION)
+    await callback.answer("Оплата подтверждена")
 
-@dp.callback_query(lambda c: c.data.startswith('reject_'))
-async def reject_payment(callback_query: types.CallbackQuery):
-    payment_id = callback_query.data.split('_')[1]
-    await bot.answer_callback_query(callback_query.id)
-
-    await bot.send_message(
-        callback_query.from_user.id,
-        f"❌ Оплата с ID {payment_id} отклонена. Пожалуйста, проверьте реквизиты."
-    )
+# ================= ПРИЁМ UDID =================
+@dp.message(lambda m: m.text and len(m.text) > 20 and " " not in m.text)
+async def receive_udid(message: types.Message):
+    user = message.from_user
+    udid = message.text.strip()
 
     await bot.send_message(
         ADMIN_ID,
-        f"❌ Оплата с ID {payment_id} отклонена."
+        "📱 *UDID ПОЛУЧЕН*\n\n"
+        f"👤 @{user.username or 'без username'}\n"
+        f"🆔 ID: {user.id}\n"
+        f"📛 Имя: {user.full_name}\n\n"
+        f"`{udid}`"
     )
+
+    await message.answer(
+        "✅ *UDID получен!*\n\n"
+        "Мы начали выпуск сертификата.\n"
+        "Ожидайте сообщение от администратора 👌"
+    )
+
+@dp.message(lambda m: m.text in ["⬅️ Назад", "⬅️ Назад к выбору"])
+async def back(message: types.Message):
+    await message.answer("📦 *Выберите сертификат:*", reply_markup=cert_menu())
 
 # ================= ЗАПУСК =================
 async def main():
