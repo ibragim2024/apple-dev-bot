@@ -7,9 +7,9 @@ from aiogram.types import (
 )
 
 # ================= НАСТРОЙКИ =================
-BOT_TOKEN = "ВСТАВЬ_СЮДА_ТОКЕН"
+BOT_TOKEN = "7989675191:AAFnkhfIaZRrDh4LBIpYyZkoYTQOmzgrRso"
 
-ADMIN_ID = 123456789  # ТВОЙ TELEGRAM ID
+ADMIN_ID = 7621656595  # ТВОЙ TELEGRAM ID
 ADMIN_USERNAME = "@Ibracc7"
 
 # ================= ТЕКСТЫ =================
