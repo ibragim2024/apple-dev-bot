@@ -3,7 +3,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.filters import CommandStart
 from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
 
-TOKEN = "ВСТАВЬ_СЮДА_НОВЫЙ_ТОКЕН_ОТ_BOTFATHER"
+TOKEN = "7989675191:AAFnkhfIaZRrDh4LBIpYyZkoYTQOmzgrRso"
 
 async def main():
     bot = Bot(token=TOKEN)
