@@ -3,7 +3,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.filters import CommandStart
 from aiogram.types import Message
 
-TOKEN = "7989675191:AAHcGwm5C8rUSCLP8YDrDPahw2_ulLM-1EA"
+TOKEN = "7989675191:AAFnkhfIaZRrDh4LBIpYyZkoYTQOmzgrRso"
 
 async def main():
     print("Бот запускается...")
