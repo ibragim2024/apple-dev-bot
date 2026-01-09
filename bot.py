@@ -43,17 +43,16 @@ CARD_TEXT = (
 )
 
 UDID_INSTRUCTION = (
-    "📱 *Отправьте ваш UDID*\n\n"
-    "🔹 *Самый простой способ:*\n"
-    "1️⃣ Перейдите 👉 https://udid.tech\n"
-    "2️⃣ Нажмите *Get UDID*\n"
-    "3️⃣ Разрешите профиль\n"
-    "4️⃣ Скопируйте UDID и отправьте сюда\n\n"
+    "📱 Отправьте ваш UDID\n\n"
+    "Как получить UDID:\n"
+    "1) Перейдите на сайт: https://udid.tech\n"
+    "2) Нажмите Get UDID\n"
+    "3) Разрешите установку профиля\n"
+    "4) Скопируйте UDID и отправьте его сюда\n\n"
     "🎥 Видео-инструкция:\n"
-    "https://youtube.com/shorts/xQ_xSXjtm-4\n\n"
-    "⚠️ Отправляйте *ТОЛЬКО UDID*"
+    "https://youtube.com/shorts/xQ_xSXjtm-4?si=GkUDadIuE9mPOHX2\n\n"
+    "❗ Отправляйте ТОЛЬКО UDID, без текста"
 )
-
 CERT_READY_TEXT = (
     "🎉 *Ваш сертификат разработчика готов!*\n\n"
     "📌 Теперь вы можете:\n"
@@ -157,12 +156,23 @@ async def receive_screenshot(message: types.Message):
 
     await message.answer("✅ Скрин получен, ожидайте подтверждение.")
 
-@dp.callback_query(lambda c: c.data.startswith("confirm_"))
+@dp.callback_query(F.data.startswith("confirm_"))
 async def confirm_payment(callback: types.CallbackQuery):
-    user_id = int(callback.data.split("_")[1])
-    await bot.send_message(user_id, UDID_INSTRUCTION)
-    await callback.answer("Оплата подтверждена")
+    await callback.answer("✅ Оплата подтверждена")
 
+    user_id = int(callback.data.replace("confirm_", ""))
+
+    # Сообщение покупателю
+    await bot.send_message(
+        user_id,
+        "✅ Оплата подтверждена!\n\n" + UDID_INSTRUCTION
+    )
+
+    # Уведомление админу
+    await bot.send_message(
+        ADMIN_ID,
+        f"💰 Оплата подтверждена\nПользователь ID: {user_id}"
+    )
 @dp.message(lambda m: m.text and len(m.text) > 20 and " " not in m.text)
 async def receive_udid(message: types.Message):
     user = message.from_user
