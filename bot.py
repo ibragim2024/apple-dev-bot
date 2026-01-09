@@ -3,29 +3,27 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
-# ====== НАСТРОЙКИ ======
+# ================= НАСТРОЙКИ =================
 BOT_TOKEN = "7989675191:AAFnkhfIaZRrDh4LBIpYyZkoYTQOmzgrRso"
-ADMIN_ID = 7621656595  # ← сюда свой ID
+
+ADMIN_ID = 7621656595  # <-- ВСТАВЬ СВОЙ TELEGRAM ID (цифры)
 ADMIN_USERNAME = "@Ibracc7"
 
-# Реквизиты
 CARD_TEXT = (
     "💳 *Оплата вручную*\n\n"
     "💰 *Карта:* `2200 1545 3850 3250`\n"
     "🏦 *СБП:* Альфа-Банк\n"
     "📱 *Телефон:* `+7 993 777-71-28`\n\n"
-    "После оплаты нажмите кнопку «💳 Я оплатил»"
+    "📸 После оплаты нажмите «💳 Я оплатил» и отправьте скриншот"
 )
 
 bot = Bot(token=BOT_TOKEN, parse_mode="Markdown")
 dp = Dispatcher()
 
-# ====== КНОПКИ ======
+# ================= КНОПКИ =================
 def main_menu():
     return ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="🛒 Купить сертификат")]
-        ],
+        keyboard=[[KeyboardButton(text="🛒 Купить сертификат")]],
         resize_keyboard=True
     )
 
@@ -51,21 +49,18 @@ def pay_menu():
         resize_keyboard=True
     )
 
-# ====== ХЕНДЛЕРЫ ======
+# ================= ХЕНДЛЕРЫ =================
 @dp.message(Command("start"))
 async def start(message: types.Message):
     await message.answer(
-        "👋 Добро пожаловать!\n\n"
-        "Я помогу купить *сертификат разработчика iPhone* 🍎",
+        "👋 *Добро пожаловать!*\n\n"
+        "Здесь вы можете купить *сертификат разработчика iPhone* 🍎",
         reply_markup=main_menu()
     )
 
 @dp.message(lambda m: m.text == "🛒 Купить сертификат")
 async def choose_cert(message: types.Message):
-    await message.answer(
-        "📦 *Выберите сертификат:*",
-        reply_markup=cert_menu()
-    )
+    await message.answer("📦 *Выберите сертификат:*", reply_markup=cert_menu())
 
 @dp.message(lambda m: m.text in [
     "🔹 Обычный — 250₽",
@@ -74,40 +69,45 @@ async def choose_cert(message: types.Message):
     "⚡ Super мгновенный — 700₽",
     "🍎 Ultra мгновенный — 2000₽"
 ])
-async def pay_info(message: types.Message):
-    await message.answer(
-        CARD_TEXT,
-        reply_markup=pay_menu()
-    )
+async def payment_info(message: types.Message):
+    await message.answer(CARD_TEXT, reply_markup=pay_menu())
 
 @dp.message(lambda m: m.text == "💳 Я оплатил")
-async def paid(message: types.Message):
-    user = message.from_user
+async def wait_screenshot(message: types.Message):
+    await message.answer(
+        "📸 *Отправьте скриншот оплаты*\n\n"
+        "⚠️ Принимаются только изображения."
+    )
 
-    # Сообщение админу
-    await bot.send_message(
-        ADMIN_ID,
-        f"💰 *НОВАЯ ОПЛАТА*\n\n"
+# ====== ПРИЁМ СКРИНШОТА ======
+@dp.message(lambda m: m.photo)
+async def receive_screenshot(message: types.Message):
+    user = message.from_user
+    photo_id = message.photo[-1].file_id
+
+    caption = (
+        "💰 *СКРИНШОТ ОПЛАТЫ*\n\n"
         f"👤 Пользователь: @{user.username or 'без username'}\n"
         f"🆔 ID: {user.id}\n"
         f"📛 Имя: {user.full_name}"
     )
 
-    # Ответ клиенту
-    await message.answer(
-        "✅ *Спасибо!*\n\n"
-        "Я передал информацию администратору.\n"
-        "Он скоро с вами свяжется 👇\n\n"
-        f"{ADMIN_USERNAME}"
-    )
-@dp.message(lambda m: m.text in ["⬅️ Назад", "⬅️ Назад к выбору"])
-async def back(message: types.Message):
-    await message.answer(
-        "📦 *Выберите сертификат:*",
-        reply_markup=cert_menu()
+    await bot.send_photo(
+        chat_id=ADMIN_ID,
+        photo=photo_id,
+        caption=caption
     )
 
-# ====== ЗАПУСК ======
+    await message.answer(
+        "✅ *Скриншот получен!*\n\n"
+        "Администратор проверит оплату и свяжется с вами 👌"
+    )
+
+@dp.message(lambda m: m.text in ["⬅️ Назад", "⬅️ Назад к выбору"])
+async def back(message: types.Message):
+    await message.answer("📦 *Выберите сертификат:*", reply_markup=cert_menu())
+
+# ================= ЗАПУСК =================
 async def main():
     print("Бот запущен и работает")
     await dp.start_polling(bot)
