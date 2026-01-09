@@ -4,7 +4,7 @@ from aiogram.filters import Command
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 # ====== НАСТРОЙКИ ======
-BOT_TOKEN = "ВСТАВЬ_СЮДА_ТОКЕН_БОТА"
+BOT_TOKEN = "7989675191:AAFnkhfIaZRrDh4LBIpYyZkoYTQOmzgrRso"
 ADMIN_USERNAME = "@Ibracc7"
 
 # Реквизиты
