@@ -1,18 +1,21 @@
 import asyncio
-import os
 
 from aiogram import Bot, Dispatcher
 from aiogram.filters import CommandStart
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import (
+    Message,
+    ReplyKeyboardMarkup,
+    KeyboardButton
+)
 
 TOKEN = "7989675191:AAFnkhfIaZRrDh4LBIpYyZkoYTQOmzgrRso"
 
-# ====== КЛАВИАТУРЫ ======
+ADMIN_USERNAME = "@Ibracc7"
+
+# ===== КНОПКИ =====
 
 main_keyboard = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text="🛒 Купить сертификат")]
-    ],
+    keyboard=[[KeyboardButton(text="🛒 Купить сертификат")]],
     resize_keyboard=True
 )
 
@@ -22,20 +25,21 @@ certs_keyboard = ReplyKeyboardMarkup(
         [KeyboardButton(text="🔹 Super обычный — 350₽")],
         [KeyboardButton(text="🍎 Мгновенный — 500₽")],
         [KeyboardButton(text="⚡ Super мгновенный — 700₽")],
-        [KeyboardButton(text="🍎 Ultra мгновенный — 2000₽")]
+        [KeyboardButton(text="🍎 Ultra мгновенный — 2000₽")],
+        [KeyboardButton(text="🔙 Назад")]
     ],
     resize_keyboard=True
 )
 
 confirm_keyboard = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="✅ Продолжить оплату")],
+        [KeyboardButton(text="💳 Я оплатил")],
         [KeyboardButton(text="🔙 Назад к выбору")]
     ],
     resize_keyboard=True
 )
 
-# ====== БОТ ======
+# ===== БОТ =====
 
 async def main():
     bot = Bot(token=TOKEN)
@@ -45,7 +49,7 @@ async def main():
     async def start(message: Message):
         await message.answer(
             "👋 Добро пожаловать!\n\n"
-            "Я помогу купить сертификат разработчика для iPhone 🍎",
+            "Здесь вы можете купить сертификат разработчика для iPhone 🍎",
             reply_markup=main_keyboard
         )
 
@@ -65,8 +69,16 @@ async def main():
     ])
     async def choose_cert(message: Message):
         await message.answer(
-            f"✅ Вы выбрали:\n\n{message.text}\n\nПодтвердите действие 👇",
-            reply_markup=confirm_keyboard
+            f"✅ Вы выбрали:\n\n{message.text}\n\n"
+            "💳 *Оплата вручную*\n\n"
+            "Переведите сумму по реквизитам:\n"
+            "━━━━━━━━━━━━━━\n"
+            "💳 Карта: **XXXX XXXX XXXX XXXX**\n"
+            "👤 Получатель: **Ибрагим**\n"
+            "━━━━━━━━━━━━━━\n\n"
+            "После оплаты нажмите кнопку **«Я оплатил»** и отправьте скрин.",
+            reply_markup=confirm_keyboard,
+            parse_mode="Markdown"
         )
 
     @dp.message(lambda m: m.text == "🔙 Назад к выбору")
@@ -76,9 +88,27 @@ async def main():
             reply_markup=certs_keyboard
         )
 
-    @dp.message(lambda m: m.text == "✅ Продолжить оплату")
-    async def pay(message: Message):
-        await message.answer("💳 Оплата будет подключена на следующем шаге")
+    @dp.message(lambda m: m.text == "💳 Я оплатил")
+    async def paid(message: Message):
+        await message.answer(
+            "📸 Пожалуйста, отправьте скриншот оплаты одним сообщением.\n\n"
+            "После проверки мы выдадим сертификат."
+        )
+
+    @dp.message(lambda m: m.photo)
+    async def get_check(message: Message):
+        await message.answer(
+            "✅ Спасибо! Оплата получена и отправлена на проверку.\n"
+            "Мы свяжемся с вами в ближайшее время."
+        )
+
+        await bot.send_message(
+            ADMIN_USERNAME,
+            f"💰 НОВАЯ ОПЛАТА\n\n"
+            f"👤 Пользователь: @{message.from_user.username}\n"
+            f"🆔 ID: {message.from_user.id}\n\n"
+            f"Проверь скрин и выдай сертификат."
+        )
 
     await dp.start_polling(bot)
 
