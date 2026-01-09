@@ -1,7 +1,8 @@
 import asyncio
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+import uuid
 
 # ================= НАСТРОЙКИ =================
 BOT_TOKEN = "7989675191:AAFnkhfIaZRrDh4LBIpYyZkoYTQOmzgrRso"
@@ -92,10 +93,18 @@ async def receive_screenshot(message: types.Message):
         f"📛 Имя: {user.full_name}"
     )
 
+    # Сохраняем ID оплаты, чтобы админ мог подтвердить или отклонить
+    payment_id = uuid.uuid4()
+
     await bot.send_photo(
         chat_id=ADMIN_ID,
         photo=photo_id,
-        caption=caption
+        caption=caption,
+        reply_markup=InlineKeyboardMarkup().add(
+            InlineKeyboardButton("✅ Подтвердить", callback_data=f"confirm_{payment_id}")
+        ).add(
+            InlineKeyboardButton("❌ Отклонить", callback_data=f"reject_{payment_id}")
+        )
     )
 
     await message.answer(
@@ -103,9 +112,36 @@ async def receive_screenshot(message: types.Message):
         "Администратор проверит оплату и свяжется с вами 👌"
     )
 
-@dp.message(lambda m: m.text in ["⬅️ Назад", "⬅️ Назад к выбору"])
-async def back(message: types.Message):
-    await message.answer("📦 *Выберите сертификат:*", reply_markup=cert_menu())
+# ====== ОБРАБОТЧИКИ ДЛЯ ПОДТВЕРЖДЕНИЯ ОПЛАТЫ ======
+@dp.callback_query(lambda c: c.data.startswith('confirm_'))
+async def confirm_payment(callback_query: types.CallbackQuery):
+    payment_id = callback_query.data.split('_')[1]
+    await bot.answer_callback_query(callback_query.id)
+    
+    await bot.send_message(
+        callback_query.from_user.id,
+        f"✅ Оплата с ID {payment_id} подтверждена! Ожидайте получения сертификата."
+    )
+
+    await bot.send_message(
+        ADMIN_ID,
+        f"✅ Оплата с ID {payment_id} подтверждена."
+    )
+
+@dp.callback_query(lambda c: c.data.startswith('reject_'))
+async def reject_payment(callback_query: types.CallbackQuery):
+    payment_id = callback_query.data.split('_')[1]
+    await bot.answer_callback_query(callback_query.id)
+
+    await bot.send_message(
+        callback_query.from_user.id,
+        f"❌ Оплата с ID {payment_id} отклонена. Пожалуйста, проверьте реквизиты."
+    )
+
+    await bot.send_message(
+        ADMIN_ID,
+        f"❌ Оплата с ID {payment_id} отклонена."
+    )
 
 # ================= ЗАПУСК =================
 async def main():
