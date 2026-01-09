@@ -1,103 +1,19 @@
 import asyncio
-import os
 from aiogram import Bot, Dispatcher
-from aiogram.filters import CommandStart, Text
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
-from payments import create_payment  # импортируем функцию создания платежа
+from aiogram.filters import CommandStart
+from aiogram.types import Message
 
-TOKEN = "7989675191:AAFAKdjano2_xFM0PnlZsGFvFPT0-NaQ3YM"
+TOKEN = "7989675191:AAHcGwm5C8rUSCLP8YDrDPahw2_ulLM-1EA"
 
 async def main():
+    print("Бот запускается...")
+
     bot = Bot(token=TOKEN)
     dp = Dispatcher()
 
-    # Основное меню
-    keyboard = ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="🛒 Купить сертификат")],
-            [KeyboardButton(text="ℹ️ Информация")]
-        ],
-        resize_keyboard=True
-    )
-
-    # Обработчик команды /start
     @dp.message(CommandStart())
     async def start(message: Message):
-        await message.answer(
-            "👋 Добро пожаловать!\n\n"
-            "Здесь вы можете приобрести сертификат разработчика для iPhone.\n\n"
-            "Выберите действие 👇",
-            reply_markup=keyboard
-        )
-
-    # Обработка выбора сертификатов
-    @dp.message(Text(equals="🛒 Купить сертификат"))
-    async def buy(message: Message):
-        await message.answer(
-            "📦 *Доступные сертификаты:*\n\n"
-            "🔹 1. Обычный — 250₽ (3 дня)\n❌ без гарантии\n\n"
-            "🔹 2. Super обычный — 350₽ (3 дня)\n✅ гарантия 1 месяц\n\n"
-            "🍎 3. Мгновенный — 500₽ (10 мин)\n❌ без гарантии\n\n"
-            "⚡ 4. Super мгновенный — 700₽ (10 мин)\n✅ гарантия 1 месяц\n\n"
-            "🍎 5. Ultra мгновенный — 2000₽ (10 мин)\n✅ гарантия 1 ГОД\n\n"
-            "👉 Напишите номер варианта (1–5)",
-            parse_mode="Markdown"
-        )
-
-    # Обрабатываем цифры 1–5
-    @dp.message(Text(equals=["1", "2", "3", "4", "5"]))
-    async def choose_certificate(message: Message):
-        choice = message.text
-        if choice == "1":
-            response = "✅ Вы выбрали сертификат:\n\n🔹 Обычный — 250₽ (3 дня)\n❌ без гарантии"
-            price = 250
-        elif choice == "2":
-            response = "✅ Вы выбрали сертификат:\n\n🔹 Super обычный — 350₽ (3 дня)\n✅ гарантия 1 месяц"
-            price = 350
-        elif choice == "3":
-            response = "✅ Вы выбрали сертификат:\n\n🍎 Мгновенный — 500₽ (10 мин)\n❌ без гарантии"
-            price = 500
-        elif choice == "4":
-            response = "✅ Вы выбрали сертификат:\n\n⚡ Super мгновенный — 700₽ (10 мин)\n✅ гарантия 1 месяц"
-            price = 700
-        elif choice == "5":
-            response = "✅ Вы выбрали сертификат:\n\n🍎 Ultra мгновенный — 2000₽ (10 мин)\n✅ гарантия 1 ГОД"
-            price = 2000
-
-        # Генерация ссылки для оплаты
-        payment_url = create_payment(price, response)
-        
-        # Подтверждение с кнопками
-        confirmation_keyboard = ReplyKeyboardMarkup(
-            keyboard=[
-                [KeyboardButton(text="✅ Продолжить оплату")],
-                [KeyboardButton(text="🔙 Назад к выбору")]
-            ],
-            resize_keyboard=True
-        )
-
-        await message.answer(response + f"\n\n👉 Перейдите по ссылке для оплаты: {payment_url}", reply_markup=confirmation_keyboard)
-
-    # Кнопка "Назад"
-    @dp.message(Text(equals="🔙 Назад к выбору"))
-    async def back_to_choice(message: Message):
-        await message.answer(
-            "📦 *Доступные сертификаты:*\n\n"
-            "🔹 1. Обычный — 250₽ (3 дня)\n❌ без гарантии\n\n"
-            "🔹 2. Super обычный — 350₽ (3 дня)\n✅ гарантия 1 месяц\n\n"
-            "🍎 3. Мгновенный — 500₽ (10 мин)\n❌ без гарантии\n\n"
-            "⚡ 4. Super мгновенный — 700₽ (10 мин)\n✅ гарантия 1 месяц\n\n"
-            "🍎 5. Ultra мгновенный — 2000₽ (10 мин)\n✅ гарантия 1 ГОД\n\n"
-            "👉 Напишите номер варианта (1–5)",
-            parse_mode="Markdown"
-        )
-
-    # Кнопка "Продолжить оплату"
-    @dp.message(Text(equals="✅ Продолжить оплату"))
-    async def continue_payment(message: Message):
-        await message.answer(
-            "💳 Для завершения покупки — выберите способ оплаты."
-        )
+        await message.answer("✅ Бот запущен и отвечает на /start")
 
     await dp.start_polling(bot)
 
