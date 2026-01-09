@@ -30,14 +30,13 @@ async def main():
     )
 
     # Обработчик команды /start
-    @dp.message(CommandStart())
-    async def start(message: Message):
-        await message.answer(
-            "👋 Добро пожаловать!\n\n"
-            "Я помогу купить сертификат разработчика для iPhone 🍎\n\n"
-            "Нажмите кнопку ниже 👇",
-            reply_markup=main_keyboard
-        )
+@dp.message(lambda message: message.text == "🔙 Назад к выбору")
+async def back_to_choice(message: Message):
+    await message.answer(
+        "📦 Доступные сертификаты:\n\n"
+        "Выберите подходящий вариант 👇",
+        reply_markup=certs_keyboard
+    )
 
     # Показ сертификатов
     @dp.message(lambda msg: msg.text == "🛒 Купить сертификат")
