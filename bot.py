@@ -1,16 +1,15 @@
 import asyncio
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
 from aiogram.types import (
     ReplyKeyboardMarkup, KeyboardButton,
     InlineKeyboardMarkup, InlineKeyboardButton
 )
-import uuid
 
 # ================= НАСТРОЙКИ =================
 BOT_TOKEN = "7989675191:AAFnkhfIaZRrDh4LBIpYyZkoYTQOmzgrRso"
 
-ADMIN_ID = 7621656595  # <-- ТВОЙ TELEGRAM ID
+ADMIN_ID = 7621656595  # <-- ВСТАВЬ СВОЙ TELEGRAM ID (ЦИФРЫ)
 ADMIN_USERNAME = "@Ibracc7"
 
 CARD_TEXT = (
@@ -23,7 +22,7 @@ CARD_TEXT = (
 
 UDID_INSTRUCTION = (
     "📱 *Отправьте ваш UDID*\n\n"
-    "🔹 *Способ 1 (самый простой):*\n"
+    "🔹 *Способ (самый простой):*\n"
     "1️⃣ Перейдите на сайт 👉 https://udid.tech\n"
     "2️⃣ Нажмите *Get UDID*\n"
     "3️⃣ Разрешите установку профиля\n"
@@ -35,11 +34,11 @@ UDID_INSTRUCTION = (
 
 CERT_READY_TEXT = (
     "🎉 *Ваш сертификат разработчика готов!*\n\n"
-    "📌 Теперь вы можете:\n"
-    "• Устанавливать приложения\n"
-    "• Подписывать IPA\n"
-    "• Использовать AltStore / Scarlet\n\n"
-    "⚠️ Если возникнут вопросы — напишите админу:\n"
+    "📌 Возможности:\n"
+    "• Установка приложений\n"
+    "• Подпись IPA\n"
+    "• AltStore / Scarlet\n\n"
+    "📩 По вопросам пишите:\n"
     f"{ADMIN_USERNAME}\n\n"
     "Спасибо за покупку ❤️"
 )
@@ -85,26 +84,26 @@ async def start(message: types.Message):
         reply_markup=main_menu()
     )
 
-@dp.message(lambda m: m.text == "🛒 Купить сертификат")
+@dp.message(F.text == "🛒 Купить сертификат")
 async def choose_cert(message: types.Message):
     await message.answer("📦 *Выберите сертификат:*", reply_markup=cert_menu())
 
-@dp.message(lambda m: m.text in [
+@dp.message(F.text.in_([
     "🔹 Обычный — 250₽",
     "🔹 Super обычный — 350₽",
     "🍎 Мгновенный — 500₽",
     "⚡ Super мгновенный — 700₽",
     "🍎 Ultra мгновенный — 2000₽"
-])
+]))
 async def payment_info(message: types.Message):
     await message.answer(CARD_TEXT, reply_markup=pay_menu())
 
-@dp.message(lambda m: m.text == "💳 Я оплатил")
+@dp.message(F.text == "💳 Я оплатил")
 async def wait_screenshot(message: types.Message):
     await message.answer("📸 *Отправьте скриншот оплаты*")
 
 # ================= СКРИН =================
-@dp.message(lambda m: m.photo)
+@dp.message(F.photo)
 async def receive_screenshot(message: types.Message):
     user = message.from_user
 
@@ -118,21 +117,37 @@ async def receive_screenshot(message: types.Message):
             f"📛 {user.full_name}"
         ),
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(
-                text="✅ Подтвердить оплату",
-                callback_data=f"confirm_{user.id}"
-            )]
+            [
+                InlineKeyboardButton(
+                    text="✅ Подтвердить оплату",
+                    callback_data=f"confirm_{user.id}"
+                )
+            ]
         ])
     )
 
     await message.answer("✅ Скрин получен, ожидайте подтверждение.")
 
 # ================= ПОДТВЕРЖДЕНИЕ =================
-@dp.callback_query(lambda c: c.data.startswith("confirm_"))
+@dp.callback_query(F.data.startswith("confirm_"))
 async def confirm_payment(callback: types.CallbackQuery):
-    user_id = int(callback.data.split("_")[1])
-    await bot.send_message(user_id, UDID_INSTRUCTION)
-    await callback.answer("Оплата подтверждена")
+    await callback.answer("✅ Оплата подтверждена")
+
+    try:
+        user_id = int(callback.data.replace("confirm_", ""))
+
+        await bot.send_message(
+            user_id,
+            "✅ *Оплата подтверждена!*\n\n" + UDID_INSTRUCTION
+        )
+
+        await bot.send_message(
+            ADMIN_ID,
+            f"✅ Оплата подтверждена для пользователя ID: {user_id}"
+        )
+
+    except Exception as e:
+        await bot.send_message(ADMIN_ID, f"❌ Ошибка confirm_payment:\n{e}")
 
 # ================= UDID =================
 @dp.message(lambda m: m.text and len(m.text) > 20 and " " not in m.text)
@@ -149,22 +164,24 @@ async def receive_udid(message: types.Message):
             f"`{message.text}`"
         ),
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(
-                text="📦 Сертификат выдан",
-                callback_data=f"cert_{user.id}"
-            )]
+            [
+                InlineKeyboardButton(
+                    text="📦 Сертификат выдан",
+                    callback_data=f"cert_{user.id}"
+                )
+            ]
         ])
     )
 
     await message.answer("✅ UDID принят. Выпускаем сертификат.")
 
 # ================= ВЫДАЧА =================
-@dp.callback_query(lambda c: c.data.startswith("cert_"))
+@dp.callback_query(F.data.startswith("cert_"))
 async def certificate_ready(callback: types.CallbackQuery):
-    user_id = int(callback.data.split("_")[1])
+    user_id = int(callback.data.replace("cert_", ""))
 
     await bot.send_message(user_id, CERT_READY_TEXT)
-    await callback.answer("Сертификат выдан")
+    await callback.answer("📦 Сертификат выдан")
 
 # ================= ЗАПУСК =================
 async def main():
