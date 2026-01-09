@@ -3,6 +3,7 @@ import os
 from aiogram import Bot, Dispatcher
 from aiogram.filters import CommandStart
 from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
+from payments import create_payment  # импортируем функцию создания платежа
 
 TOKEN = os.getenv("BOT_TOKEN")
 
@@ -49,15 +50,23 @@ async def main():
         choice = message.text
         if choice == "1":
             response = "✅ Вы выбрали сертификат:\n\n🔹 Обычный — 250₽ (3 дня)\n❌ без гарантии"
+            price = 250
         elif choice == "2":
             response = "✅ Вы выбрали сертификат:\n\n🔹 Super обычный — 350₽ (3 дня)\n✅ гарантия 1 месяц"
+            price = 350
         elif choice == "3":
             response = "✅ Вы выбрали сертификат:\n\n🍎 Мгновенный — 500₽ (10 мин)\n❌ без гарантии"
+            price = 500
         elif choice == "4":
             response = "✅ Вы выбрали сертификат:\n\n⚡ Super мгновенный — 700₽ (10 мин)\n✅ гарантия 1 месяц"
+            price = 700
         elif choice == "5":
             response = "✅ Вы выбрали сертификат:\n\n🍎 Ultra мгновенный — 2000₽ (10 мин)\n✅ гарантия 1 ГОД"
+            price = 2000
 
+        # Генерация ссылки для оплаты
+        payment_url = create_payment(price, response)
+        
         # Подтверждение с кнопками
         confirmation_keyboard = ReplyKeyboardMarkup(
             keyboard=[
@@ -67,7 +76,7 @@ async def main():
             resize_keyboard=True
         )
 
-        await message.answer(response + "\n\n👉 Выберите, что делать дальше:", reply_markup=confirmation_keyboard)
+        await message.answer(response + f"\n\n👉 Перейдите по ссылке для оплаты: {payment_url}", reply_markup=confirmation_keyboard)
 
     # Кнопка "Назад"
     @dp.message(lambda message: message.text == "🔙 Назад к выбору")
@@ -87,7 +96,7 @@ async def main():
     @dp.message(lambda message: message.text == "✅ Продолжить оплату")
     async def continue_payment(message: Message):
         await message.answer(
-            "💳 Для завершения покупки — выберите способ оплаты."
+            "💳 Для завершения покупки — перейдите по ссылке выше и завершите оплату."
         )
 
     await dp.start_polling(bot)
