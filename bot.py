@@ -138,9 +138,27 @@ async def receive_screenshot(message: types.Message):
 # ================= ПОДТВЕРЖДЕНИЕ =================
 @dp.callback_query(lambda c: c.data.startswith("confirm_"))
 async def confirm_payment(callback: types.CallbackQuery):
-    user_id = int(callback.data.split("_")[1])
-    await bot.send_message(user_id, UDID_INSTRUCTION)
-    await callback.answer("Оплата подтверждена")
+    try:
+        user_id = int(callback.data.replace("confirm_", ""))
+
+        # ОБЯЗАТЕЛЬНО отвечаем на callback
+        await callback.answer("✅ Оплата подтверждена")
+
+        # Сообщение клиенту
+        await bot.send_message(
+            user_id,
+            "✅ *Оплата подтверждена!*\n\n" + UDID_INSTRUCTION
+        )
+
+        # Сообщение админу
+        await bot.send_message(
+            ADMIN_ID,
+            f"✅ Оплата подтверждена для пользователя ID: {user_id}"
+        )
+
+    except Exception as e:
+        await callback.answer("❌ Ошибка", show_alert=True)
+        await bot.send_message(ADMIN_ID, f"❌ Ошибка confirm_payment:\n{e}")
 
 # ================= UDID =================
 @dp.message(lambda m: m.text and len(m.text) > 20 and " " not in m.text)
