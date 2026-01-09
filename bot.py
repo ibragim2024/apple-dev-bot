@@ -8,7 +8,7 @@ from aiogram.types import (
 
 # ================= НАСТРОЙКИ =================
 BOT_TOKEN = "7989675191:AAFnkhfIaZRrDh4LBIpYyZkoYTQOmzgrRso"
-ADMIN_ID = 7621656595  # <-- Вставь свой TELEGRAM ID (число)
+ADMIN_ID = 7621656595  # <-- Вставь свой TELEGRAM ID
 ADMIN_USERNAME = "@Ibracc7"
 
 # ================= ТЕКСТЫ =================
@@ -16,7 +16,7 @@ START_TEXT = (
     "🍎 *Сертификат разработчика iOS*\n"
     "без ПК • без jailbreak • за 5 минут\n\n"
     "✅ Установка IPA на iPhone\n"
-    "✅ Работает на iOS 16–26\n"
+    "✅ Работает на iOS 16–18\n"
     "✅ Подходит для Scarlet / AltStore\n"
     "✅ Единоразовая оплата\n\n"
     "👇 Нажмите кнопку ниже, чтобы продолжить"
@@ -77,6 +77,12 @@ CERT_READY_TEXT = (
     "Спасибо за покупку ❤️"
 )
 
+TRUST_TEXT = (
+    "🔒 *100+ довольных клиентов!*\n\n"
+    "🌟 Наши пользователи уже установили приложения на 200+ iPhone с помощью нашего сертификата.\n\n"
+    "💬 Оставьте отзыв и станьте частью нашего успеха!"
+)
+
 # ================= БОТ =================
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -84,7 +90,7 @@ dp = Dispatcher()
 # ================= КНОПКИ =================
 def main_menu():
     return ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text="🛒 Купить сертификат")]],
+        keyboard=[[KeyboardButton(text="🛒 Купить сертификат"), KeyboardButton(text="💬 Оставить отзыв")]],
         resize_keyboard=True
     )
 
@@ -113,95 +119,39 @@ def pay_menu():
 # ================= СТАРТ =================
 @dp.message(Command("start"))
 async def start(message: types.Message):
-    await message.answer(START_TEXT, reply_markup=main_menu())
-
-@dp.message(lambda m: m.text == "🛒 Купить сертификат")
-async def choose_cert(message: types.Message):
-    await message.answer(CHOOSE_CERT_TEXT, reply_markup=cert_menu())
-
-@dp.message(lambda m: m.text in [
-    "🔹 Обычный — 250₽",
-    "🔹 Super обычный — 350₽",
-    "🍎 Мгновенный — 500₽",
-    "⚡ Super мгновенный — 700₽",
-    "🍎 Ultra мгновенный — 2000₽"
-])
-async def payment_info(message: types.Message):
-    await message.answer(CARD_TEXT, reply_markup=pay_menu())
-
-@dp.message(lambda m: m.text == "💳 Я оплатил")
-async def wait_screenshot(message: types.Message):
-    await message.answer(WAIT_SCREENSHOT_TEXT)
-
-# ================= СКРИН =================
-@dp.message(lambda m: m.photo)
-async def receive_screenshot(message: types.Message):
-    user = message.from_user
-
-    await bot.send_photo(
-        ADMIN_ID,
-        message.photo[-1].file_id,
-        caption=(
-            "💰 *НОВАЯ ОПЛАТА*\n\n"
-            f"👤 @{user.username or 'без username'}\n"
-            f"🆔 {user.id}\n"
-            f"📛 {user.full_name}"
-        ),
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(
-                text="✅ Подтвердить оплату",
-                callback_data=f"confirm_{user.id}"
-            )]
-        ])
+    await message.answer(
+        f"{START_TEXT}\n\n{TRUST_TEXT}",
+        reply_markup=main_menu()
     )
 
-    await message.answer("✅ Скрин получен, ожидайте подтверждение")
+# ================= ОТЗЫВЫ =================
+@dp.message(lambda m: m.text == "💬 Оставить отзыв")
+async def leave_review(message: types.Message):
+    await message.answer(
+        "✍️ Пожалуйста, оставьте ваш отзыв!\n\n"
+        "Напишите, как вам наш сервис, был ли он полезен, что вам понравилось или что можно улучшить.",
+        reply_markup=ReplyKeyboardMarkup(
+            keyboard=[[KeyboardButton(text="⬅️ Назад")]],
+            resize_keyboard=True
+        )
+    )
 
-# ================= ПОДТВЕРЖДЕНИЕ =================
-@dp.callback_query(lambda c: c.data.startswith("confirm_"))
-async def confirm_payment(callback: types.CallbackQuery):
-    try:
-        user_id = int(callback.data.split("_")[1])  # Извлекаем user_id из callback_data
-        await callback.answer("✅ Оплата подтверждена")  # Отправляем ответ на нажатие кнопки
-
-        # Отправляем пользователю инструкцию по UDID
-        await bot.send_message(user_id, UDID_INSTRUCTION)
-
-        # Уведомление админу
-        await bot.send_message(ADMIN_ID, f"✅ Оплата подтверждена для пользователя ID: {user_id}")
-
-    except Exception as e:
-        await callback.answer(f"❌ Ошибка: {e}")
-        print(f"Ошибка в обработке: {e}")
-
-# ================= UDID =================
-@dp.message(lambda m: m.text and len(m.text) > 20 and " " not in m.text)
-async def receive_udid(message: types.Message):
+@dp.message(lambda m: m.text and m.text != "⬅️ Назад")
+async def receive_review(message: types.Message):
     user = message.from_user
+    user_review = message.text
 
+    # Отправляем отзыв админу
     await bot.send_message(
         ADMIN_ID,
-        f"📱 *UDID ПОЛУЧЕН*\n\n"
+        f"💬 *НОВЫЙ ОТЗЫВ*:\n\n"
         f"👤 @{user.username or 'без username'}\n"
         f"🆔 {user.id}\n"
         f"📛 {user.full_name}\n\n"
-        f"`{message.text}`",
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(
-                text="📦 Сертификат выдан",
-                callback_data=f"cert_{user.id}"
-            )]
-        ])
+        f"Отзыв: {user_review}"
     )
 
-    await message.answer("✅ UDID принят, выпускаем сертификат")
-
-# ================= ВЫДАЧА =================
-@dp.callback_query(lambda c: c.data.startswith("cert_"))
-async def certificate_ready(callback: types.CallbackQuery):
-    user_id = int(callback.data.split("_")[1])
-    await bot.send_message(user_id, CERT_READY_TEXT)
-    await callback.answer("Готово")
+    await message.answer("Спасибо за ваш отзыв! Мы ценим ваше мнение. 😊")
 
 # ================= ЗАПУСК =================
 async def main():
