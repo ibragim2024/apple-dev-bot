@@ -28,10 +28,25 @@ UDID_INSTRUCTION = (
     "2️⃣ Нажмите *Get UDID*\n"
     "3️⃣ Разрешите установку профиля\n"
     "4️⃣ Скопируйте UDID и отправьте сюда\n\n"
-    "🎥 *Видео-инструкция:*\n"
-    "https://youtu.be/9zE0s9GJ7bA\n\n"
-    "⚠️ Отправляйте *ТОЛЬКО UDID* (буквы и цифры)"
+    "🎥 Видео-инструкция:\n"
+    "https://youtube.com/shorts/xQ_xSXjtm-4?si=MbwEqmaukFC3sY6t"
+    "⚠️ Отправляйте *ТОЛЬКО UDID*"
 )
+
+CERT_READY_TEXT = (
+    "🎉 *Ваш сертификат разработчика готов!*\n\n"
+    "📌 Теперь вы можете:\n"
+    "• Устанавливать приложения\n"
+    "• Подписывать IPA\n"
+    "• Использовать AltStore / Scarlet\n\n"
+    "⚠️ Если возникнут вопросы — напишите админу:\n"
+    f"{ADMIN_USERNAME}\n\n"
+    "Спасибо за покупку ❤️"
+)
+
+# Путь к видео и файлу для отправки
+VIDEO_PATH = "path_to_your_video.mp4"  # Путь к видео (на сервере)
+PDF_PATH = "path_to_your_file.pdf"  # Путь к PDF (на сервере)
 
 bot = Bot(token=BOT_TOKEN, parse_mode="Markdown")
 dp = Dispatcher()
@@ -65,7 +80,7 @@ def pay_menu():
         resize_keyboard=True
     )
 
-# ================= ХЕНДЛЕРЫ =================
+# ================= СТАРТ =================
 @dp.message(Command("start"))
 async def start(message: types.Message):
     await message.answer(
@@ -90,10 +105,7 @@ async def payment_info(message: types.Message):
 
 @dp.message(lambda m: m.text == "💳 Я оплатил")
 async def wait_screenshot(message: types.Message):
-    await message.answer(
-        "📸 *Отправьте скриншот оплаты*\n\n"
-        "⚠️ Принимаются только изображения."
-    )
+    await message.answer("📸 *Отправьте скриншот оплаты*")
 
 # ================= ПРИЁМ СКРИНА =================
 @dp.message(lambda m: m.photo)
@@ -105,8 +117,8 @@ async def receive_screenshot(message: types.Message):
     caption = (
         "💰 *НОВАЯ ОПЛАТА*\n\n"
         f"👤 @{user.username or 'без username'}\n"
-        f"🆔 ID: {user.id}\n"
-        f"📛 Имя: {user.full_name}"
+        f"🆔 {user.id}\n"
+        f"📛 {user.full_name}"
     )
 
     await bot.send_photo(
@@ -114,52 +126,80 @@ async def receive_screenshot(message: types.Message):
         photo_id,
         caption=caption,
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="✅ Подтвердить",
-                    callback_data=f"confirm_{user.id}"
-                )
-            ]
+            [InlineKeyboardButton(
+                text="✅ Подтвердить оплату",
+                callback_data=f"confirm_{user.id}"
+            )]
         ])
     )
 
-    await message.answer(
-        "✅ *Скриншот получен!*\n\n"
-        "После проверки вам нужно будет отправить UDID."
-    )
+    await message.answer("✅ Скрин получен, ожидайте подтверждение.")
 
 # ================= ПОДТВЕРЖДЕНИЕ =================
 @dp.callback_query(lambda c: c.data.startswith("confirm_"))
 async def confirm_payment(callback: types.CallbackQuery):
     user_id = int(callback.data.split("_")[1])
-
     await bot.send_message(user_id, UDID_INSTRUCTION)
     await callback.answer("Оплата подтверждена")
 
-# ================= ПРИЁМ UDID =================
+# ================= UDID =================
 @dp.message(lambda m: m.text and len(m.text) > 20 and " " not in m.text)
 async def receive_udid(message: types.Message):
     user = message.from_user
-    udid = message.text.strip()
 
     await bot.send_message(
         ADMIN_ID,
-        "📱 *UDID ПОЛУЧЕН*\n\n"
-        f"👤 @{user.username or 'без username'}\n"
-        f"🆔 ID: {user.id}\n"
-        f"📛 Имя: {user.full_name}\n\n"
-        f"`{udid}`"
+        (
+            "📱 *UDID ПОЛУЧЕН*\n\n"
+            f"👤 @{user.username or 'без username'}\n"
+            f"🆔 {user.id}\n"
+            f"📛 {user.full_name}\n\n"
+            f"`{message.text}`"
+        ),
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(
+                text="📦 Сертификат выдан",
+                callback_data=f"cert_{user.id}"
+            )]
+        ])
     )
 
-    await message.answer(
-        "✅ *UDID получен!*\n\n"
-        "Мы начали выпуск сертификата.\n"
-        "Ожидайте сообщение от администратора 👌"
+    await message.answer("✅ UDID принят. Выпускаем сертификат.")
+
+# ================= ВЫДАЧА =================
+@dp.callback_query(lambda c: c.data.startswith("cert_"))
+async def certificate_ready(callback: types.CallbackQuery):
+    user_id = int(callback.data.split("_")[1])
+
+    # Отправка инструкции по установке с видео и файлом
+    await bot.send_message(
+        user_id,
+        CERT_READY_TEXT
     )
 
-@dp.message(lambda m: m.text in ["⬅️ Назад", "⬅️ Назад к выбору"])
-async def back(message: types.Message):
-    await message.answer("📦 *Выберите сертификат:*", reply_markup=cert_menu())
+    # Отправляем ссылку на бота и видео
+    await bot.send_message(
+        user_id,
+        f"📱 *Перейдите на этого бота @ipawind_bot , если возникнут вопросы:* {bot.get_me().username}\n\n"
+        "🎥 Видео-инструкция по установке:\n"
+        "https://youtube.com/shorts/hq_qrVlIIjg?si=lKhYJcLSMp_9W8Pv"
+    )
+
+    # Отправляем видео
+    await bot.send_video(
+        user_id,
+        VIDEO_PATH,
+        caption="📹 Вот видео с инструкцией по установке вашего сертификата!"
+    )
+
+    # Отправляем файл (например, сертификат или инструкцию в PDF)
+    await bot.send_document(
+        user_id,
+        PDF_PATH,
+        caption="📄 Вот файл с инструкциями по установке и использованию сертификата."
+    )
+
+    await callback.answer("Сертификат выдан")
 
 # ================= ЗАПУСК =================
 async def main():
