@@ -29,7 +29,7 @@ UDID_INSTRUCTION = (
     "3️⃣ Разрешите установку профиля\n"
     "4️⃣ Скопируйте UDID и отправьте сюда\n\n"
     "🎥 Видео-инструкция:\n"
-    "https://youtube.com/shorts/xQ_xSXjtm-4?si=MbwEqmaukFC3sY6t"
+    "https://youtu.be/9zE0s9GJ7bA\n\n"
     "⚠️ Отправляйте *ТОЛЬКО UDID*"
 )
 
@@ -43,10 +43,6 @@ CERT_READY_TEXT = (
     f"{ADMIN_USERNAME}\n\n"
     "Спасибо за покупку ❤️"
 )
-
-# Путь к видео и файлу для отправки
-VIDEO_PATH = "path_to_your_video.mp4"  # Путь к видео (на сервере)
-PDF_PATH = "path_to_your_file.pdf"  # Путь к PDF (на сервере)
 
 bot = Bot(token=BOT_TOKEN, parse_mode="Markdown")
 dp = Dispatcher()
@@ -107,24 +103,20 @@ async def payment_info(message: types.Message):
 async def wait_screenshot(message: types.Message):
     await message.answer("📸 *Отправьте скриншот оплаты*")
 
-# ================= ПРИЁМ СКРИНА =================
+# ================= СКРИН =================
 @dp.message(lambda m: m.photo)
 async def receive_screenshot(message: types.Message):
     user = message.from_user
-    photo_id = message.photo[-1].file_id
-    payment_id = uuid.uuid4()
-
-    caption = (
-        "💰 *НОВАЯ ОПЛАТА*\n\n"
-        f"👤 @{user.username or 'без username'}\n"
-        f"🆔 {user.id}\n"
-        f"📛 {user.full_name}"
-    )
 
     await bot.send_photo(
         ADMIN_ID,
-        photo_id,
-        caption=caption,
+        message.photo[-1].file_id,
+        caption=(
+            "💰 *НОВАЯ ОПЛАТА*\n\n"
+            f"👤 @{user.username or 'без username'}\n"
+            f"🆔 {user.id}\n"
+            f"📛 {user.full_name}"
+        ),
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(
                 text="✅ Подтвердить оплату",
@@ -138,27 +130,9 @@ async def receive_screenshot(message: types.Message):
 # ================= ПОДТВЕРЖДЕНИЕ =================
 @dp.callback_query(lambda c: c.data.startswith("confirm_"))
 async def confirm_payment(callback: types.CallbackQuery):
-    try:
-        user_id = int(callback.data.replace("confirm_", ""))
-
-        # ОБЯЗАТЕЛЬНО отвечаем на callback
-        await callback.answer("✅ Оплата подтверждена")
-
-        # Сообщение клиенту
-        await bot.send_message(
-            user_id,
-            "✅ *Оплата подтверждена!*\n\n" + UDID_INSTRUCTION
-        )
-
-        # Сообщение админу
-        await bot.send_message(
-            ADMIN_ID,
-            f"✅ Оплата подтверждена для пользователя ID: {user_id}"
-        )
-
-    except Exception as e:
-        await callback.answer("❌ Ошибка", show_alert=True)
-        await bot.send_message(ADMIN_ID, f"❌ Ошибка confirm_payment:\n{e}")
+    user_id = int(callback.data.split("_")[1])
+    await bot.send_message(user_id, UDID_INSTRUCTION)
+    await callback.answer("Оплата подтверждена")
 
 # ================= UDID =================
 @dp.message(lambda m: m.text and len(m.text) > 20 and " " not in m.text)
@@ -189,34 +163,7 @@ async def receive_udid(message: types.Message):
 async def certificate_ready(callback: types.CallbackQuery):
     user_id = int(callback.data.split("_")[1])
 
-    # Отправка инструкции по установке с видео и файлом
-    await bot.send_message(
-        user_id,
-        CERT_READY_TEXT
-    )
-
-    # Отправляем ссылку на бота и видео
-    await bot.send_message(
-        user_id,
-        f"📱 *Перейдите на этого бота @ipawind_bot , если возникнут вопросы:* {bot.get_me().username}\n\n"
-        "🎥 Видео-инструкция по установке:\n"
-        "https://youtube.com/shorts/hq_qrVlIIjg?si=lKhYJcLSMp_9W8Pv"
-    )
-
-    # Отправляем видео
-    await bot.send_video(
-        user_id,
-        VIDEO_PATH,
-        caption="📹 Вот видео с инструкцией по установке вашего сертификата!"
-    )
-
-    # Отправляем файл (например, сертификат или инструкцию в PDF)
-    await bot.send_document(
-        user_id,
-        PDF_PATH,
-        caption="📄 Вот файл с инструкциями по установке и использованию сертификата."
-    )
-
+    await bot.send_message(user_id, CERT_READY_TEXT)
     await callback.answer("Сертификат выдан")
 
 # ================= ЗАПУСК =================
