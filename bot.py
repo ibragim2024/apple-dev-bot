@@ -1,29 +1,20 @@
-from aiogram import Bot, Dispatcher, executor, types
+import asyncio
 import os
+from aiogram import Bot, Dispatcher
+from aiogram.types import Message
+from aiogram.filters import CommandStart
 
 TOKEN = os.getenv("BOT_TOKEN")
 
-bot = Bot(token=TOKEN)
-dp = Dispatcher(bot)
+async def main():
+    bot = Bot(token=TOKEN)
+    dp = Dispatcher()
 
-@dp.message_handler(commands=["start"])
-async def start(msg: types.Message):
-    await msg.answer(
-        "👋 Добро пожаловать!\n\n"
-        "Магазин Apple Developer Services\n\n"
-        "Напиши /certs чтобы выбрать сертификат"
-    )
+    @dp.message(CommandStart())
+    async def start(message: Message):
+        await message.answer("✅ Бот запущен и работает")
 
-@dp.message_handler(commands=["certs"])
-async def certs(msg: types.Message):
-    await msg.answer(
-        "📱 Сертификаты:\n\n"
-        "🔹 Обычный — 250₽\n"
-        "🔹 Super обычный — 350₽\n"
-        "🍎 Мгновенный — 500₽\n"
-        "⚡ Super мгновенный — 700₽\n"
-        "🍎 Ultra мгновенный — 2000₽"
-    )
+    await dp.start_polling(bot)
 
 if __name__ == "__main__":
-    executor.start_polling(dp)
+    asyncio.run(main())
