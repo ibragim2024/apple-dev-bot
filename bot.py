@@ -8,89 +8,47 @@ from aiogram.types import (
 
 # ================= НАСТРОЙКИ =================
 BOT_TOKEN = "7989675191:AAFnkhfIaZRrDh4LBIpYyZkoYTQOmzgrRso"
-ADMIN_ID = 7621656595  # <-- Вставь свой TELEGRAM ID
+
+ADMIN_ID = 7621656595  # <-- ТВОЙ TELEGRAM ID
 ADMIN_USERNAME = "@Ibracc7"
 
-# ================= ТЕКСТЫ =================
-START_TEXT = (
-    "🍎 *Сертификат разработчика iOS*\n"
-    "без ПК • без jailbreak • за 5 минут\n\n"
-    "✅ Установка IPA на iPhone\n"
-    "✅ Работает на iOS 16–26\n"
-    "✅ Подходит для Scarlet / AltStore\n"
-    "✅ Единоразовая оплата\n\n"
-    "👇 Нажмите кнопку ниже, чтобы продолжить"
-)
-
-CHOOSE_CERT_TEXT = (
-    "📦 *Выберите сертификат*\n\n"
-    "🔹 *Обычный — 250₽*\n"
-    "Подходит для теста\n\n"
-    "🔹 *Super обычный — 350₽* ⭐️\n"
-    "Лучший выбор по стабильности\n\n"
-    "🍎 *Мгновенный — 500₽*\n"
-    "Выдача без ожидания\n\n"
-    "⚡ *Super мгновенный — 700₽*\n"
-    "Максимальная стабильность\n\n"
-    "🍎 *Ultra мгновенный — 2000₽*\n"
-    "Для постоянного использования"
-)
-
 CARD_TEXT = (
-    "🔐 *Безопасная оплата*\n\n"
-    "• Проверка вручную\n"
-    "• Поддержка до результата\n\n"
-    "💳 *Реквизиты:*\n\n"
-    "💰 Карта: `2200 1545 3850 3250`\n"
+    "💳 Оплата вручную\n\n"
+    "💰 Карта: 2200 1545 3850 3250\n"
     "🏦 СБП: Альфа-Банк\n"
-    "📱 Телефон: `+7 993 777-71-28`\n\n"
-    "📸 После оплаты нажмите *«💳 Я оплатил»* "
-    "и отправьте скриншот"
-)
-
-WAIT_SCREENSHOT_TEXT = (
-    "✅ *Отлично!*\n\n"
-    "📸 Отправьте *скриншот оплаты*\n"
-    "⏱ Проверка занимает 1–5 минут"
+    "📱 Телефон: +7 993 777-71-28\n\n"
+    "📸 После оплаты нажмите «Я оплатил» и отправьте скриншот"
 )
 
 UDID_INSTRUCTION = (
-    "💳 *Оплата подтверждена!* ✅\n\n"
-    "📱 *Теперь отправьте UDID*\n\n"
-    "1️⃣ Перейдите 👉 https://udid.tech\n"
-    "2️⃣ Нажмите *Get UDID*\n"
+    "📱 Отправьте ваш UDID\n\n"
+    "1️⃣ Перейдите на сайт: https://udid.tech\n"
+    "2️⃣ Нажмите Get UDID\n"
     "3️⃣ Разрешите установку профиля\n"
     "4️⃣ Скопируйте UDID и отправьте сюда\n\n"
     "🎥 Видео-инструкция:\n"
     "https://youtube.com/shorts/xQ_xSXjtm-4\n\n"
-    "⚠️ Отправляйте *ТОЛЬКО UDID*"
+    "⚠️ Отправляйте ТОЛЬКО UDID"
 )
 
 CERT_READY_TEXT = (
-    "🎉 *Сертификат готов!* 🍎\n\n"
+    "🎉 Ваш сертификат готов!\n\n"
     "Теперь вы можете:\n"
-    "• Устанавливать IPA\n"
-    "• Использовать Scarlet / AltStore\n\n"
-    "📥 Инструкция по установке будет отправлена далее\n\n"
-    "💬 Поддержка: "
+    "• Устанавливать приложения\n"
+    "• Подписывать IPA\n"
+    "• Использовать AltStore / Scarlet\n\n"
+    "По всем вопросам:\n"
     f"{ADMIN_USERNAME}\n\n"
     "Спасибо за покупку ❤️"
 )
 
-TRUST_TEXT = (
-    "🔒 *100+ довольных клиентов!*\n\n"
-    "🌟 Наши пользователи уже установили приложения на 200+ iPhone с помощью нашего сертификата.\n\n"
-    "💬 Оставьте отзыв и станьте частью нашего успеха!"
-)
-
-# ================= БОТ =================
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 # ================= КНОПКИ =================
 def main_menu():
     return ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text="🛒 Купить сертификат"), KeyboardButton(text="💬 Оставить отзыв")]],
+        keyboard=[[KeyboardButton(text="🛒 Купить сертификат")]],
         resize_keyboard=True
     )
 
@@ -120,42 +78,102 @@ def pay_menu():
 @dp.message(Command("start"))
 async def start(message: types.Message):
     await message.answer(
-        f"{START_TEXT}\n\n{TRUST_TEXT}",
+        "👋 Добро пожаловать!\n\n"
+        "Здесь вы можете купить сертификат разработчика iPhone 🍎",
         reply_markup=main_menu()
     )
 
-# ================= ОТЗЫВЫ =================
-@dp.message(lambda m: m.text == "💬 Оставить отзыв")
-async def leave_review(message: types.Message):
-    await message.answer(
-        "✍️ Пожалуйста, оставьте ваш отзыв!\n\n"
-        "Напишите, как вам наш сервис, был ли он полезен, что вам понравилось или что можно улучшить.",
-        reply_markup=ReplyKeyboardMarkup(
-            keyboard=[[KeyboardButton(text="⬅️ Назад")]],
-            resize_keyboard=True
-        )
+# ================= НАВИГАЦИЯ =================
+@dp.message(lambda m: m.text == "🛒 Купить сертификат")
+async def choose_cert(message: types.Message):
+    await message.answer("📦 Выберите сертификат:", reply_markup=cert_menu())
+
+@dp.message(lambda m: m.text == "⬅️ Назад")
+async def back_main(message: types.Message):
+    await message.answer("Главное меню 👇", reply_markup=main_menu())
+
+@dp.message(lambda m: m.text == "⬅️ Назад к выбору")
+async def back_cert(message: types.Message):
+    await message.answer("📦 Выберите сертификат:", reply_markup=cert_menu())
+
+# ================= ОПЛАТА =================
+@dp.message(lambda m: m.text in [
+    "🔹 Обычный — 250₽",
+    "🔹 Super обычный — 350₽",
+    "🍎 Мгновенный — 500₽",
+    "⚡ Super мгновенный — 700₽",
+    "🍎 Ultra мгновенный — 2000₽"
+])
+async def payment_info(message: types.Message):
+    await message.answer(CARD_TEXT, reply_markup=pay_menu())
+
+@dp.message(lambda m: m.text == "💳 Я оплатил")
+async def wait_screenshot(message: types.Message):
+    await message.answer("📸 Отправьте скриншот оплаты")
+
+# ================= СКРИН =================
+@dp.message(lambda m: m.photo)
+async def receive_screenshot(message: types.Message):
+    user = message.from_user
+
+    await bot.send_photo(
+        ADMIN_ID,
+        message.photo[-1].file_id,
+        caption=(
+            "💰 НОВАЯ ОПЛАТА\n\n"
+            f"👤 @{user.username or 'без username'}\n"
+            f"🆔 {user.id}\n"
+            f"📛 {user.full_name}"
+        ),
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(
+                text="✅ Подтвердить оплату",
+                callback_data=f"confirm_{user.id}"
+            )]
+        ])
     )
 
-@dp.message(lambda m: m.text and m.text != "⬅️ Назад")
-async def receive_review(message: types.Message):
-    user = message.from_user
-    user_review = message.text
+    await message.answer("✅ Скрин получен. Ожидайте подтверждение.")
 
-    # Отправляем отзыв админу
+# ================= ПОДТВЕРЖДЕНИЕ =================
+@dp.callback_query(lambda c: c.data.startswith("confirm_"))
+async def confirm_payment(callback: types.CallbackQuery):
+    user_id = int(callback.data.split("_")[1])
+    await bot.send_message(user_id, UDID_INSTRUCTION)
+    await callback.answer("Оплата подтверждена")
+
+# ================= UDID =================
+@dp.message(lambda m: m.text and len(m.text) > 20 and " " not in m.text)
+async def receive_udid(message: types.Message):
+    user = message.from_user
+
     await bot.send_message(
         ADMIN_ID,
-        f"💬 *НОВЫЙ ОТЗЫВ*:\n\n"
+        f"📱 UDID ПОЛУЧЕН\n\n"
         f"👤 @{user.username or 'без username'}\n"
         f"🆔 {user.id}\n"
         f"📛 {user.full_name}\n\n"
-        f"Отзыв: {user_review}"
+        f"{message.text}",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(
+                text="📦 Сертификат выдан",
+                callback_data=f"cert_{user.id}"
+            )]
+        ])
     )
 
-    await message.answer("Спасибо за ваш отзыв! Мы ценим ваше мнение. 😊")
+    await message.answer("✅ UDID принят. Выпускаем сертификат.")
+
+# ================= ВЫДАЧА =================
+@dp.callback_query(lambda c: c.data.startswith("cert_"))
+async def certificate_ready(callback: types.CallbackQuery):
+    user_id = int(callback.data.split("_")[1])
+    await bot.send_message(user_id, CERT_READY_TEXT)
+    await callback.answer("Сертификат выдан")
 
 # ================= ЗАПУСК =================
 async def main():
-    print("Бот запущен и работает")
+    print("Бот запущен и стабильно работает")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
