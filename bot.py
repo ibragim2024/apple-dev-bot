@@ -71,10 +71,11 @@ async def main():
         await message.answer(
             f"✅ Вы выбрали:\n\n{message.text}\n\n"
             "💳 *Оплата вручную*\n\n"
-            "Переведите сумму по реквизитам:\n"
+            "Переведите сумму удобным способом:\n"
             "━━━━━━━━━━━━━━\n"
-            "💳 Карта: **XXXX XXXX XXXX XXXX**\n"
-            "👤 Получатель: **Ибрагим**\n"
+            "💳 *Карта:* `2200 1545 3850 3250`\n"
+            "🏦 *СБП:* Альфа-Банк\n"
+            "📱 `+7 993 777 71 28`\n"
             "━━━━━━━━━━━━━━\n\n"
             "После оплаты нажмите кнопку **«Я оплатил»** и отправьте скрин.",
             reply_markup=confirm_keyboard,
@@ -104,10 +105,11 @@ async def main():
 
         await bot.send_message(
             ADMIN_USERNAME,
-            f"💰 НОВАЯ ОПЛАТА\n\n"
+            f"💰 *НОВАЯ ОПЛАТА*\n\n"
             f"👤 Пользователь: @{message.from_user.username}\n"
             f"🆔 ID: {message.from_user.id}\n\n"
-            f"Проверь скрин и выдай сертификат."
+            f"Проверь скрин и выдай сертификат.",
+            parse_mode="Markdown"
         )
 
     await dp.start_polling(bot)
