@@ -5,7 +5,7 @@ from aiogram.filters import CommandStart, Text
 from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
 from payments import create_payment  # импортируем функцию создания платежа
 
-TOKEN = os.getenv("BOT_TOKEN")
+TOKEN = "7989675191:AAFAKdjano2_xFM0PnlZsGFvFPT0-NaQ3YM"
 
 async def main():
     bot = Bot(token=TOKEN)
