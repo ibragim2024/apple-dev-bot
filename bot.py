@@ -5,6 +5,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 # ====== НАСТРОЙКИ ======
 BOT_TOKEN = "7989675191:AAFnkhfIaZRrDh4LBIpYyZkoYTQOmzgrRso"
+ADMIN_ID = 7621656595  # ← сюда свой ID
 ADMIN_USERNAME = "@Ibracc7"
 
 # Реквизиты
