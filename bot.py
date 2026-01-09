@@ -8,7 +8,7 @@ from aiogram.types import (
 
 # ================= НАСТРОЙКИ =================
 BOT_TOKEN = "7989675191:AAFnkhfIaZRrDh4LBIpYyZkoYTQOmzgrRso"
-ADMIN_ID = 7621656595  # <-- ВСТАВЬ СВОЙ TELEGRAM ID (цифры)
+ADMIN_ID = 7621656595  # <-- Вставь свой TELEGRAM ID (число)
 ADMIN_USERNAME = "@Ibracc7"
 
 # ================= ТЕКСТЫ =================
@@ -78,7 +78,7 @@ CERT_READY_TEXT = (
 )
 
 # ================= БОТ =================
-bot = Bot(token=BOT_TOKEN, parse_mode="Markdown")
+bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 # ================= КНОПКИ =================
@@ -161,14 +161,18 @@ async def receive_screenshot(message: types.Message):
 @dp.callback_query(lambda c: c.data.startswith("confirm_"))
 async def confirm_payment(callback: types.CallbackQuery):
     try:
-        user_id = int(callback.data.split("_")[1])
-        await callback.answer("✅ Оплата подтверждена")
+        user_id = int(callback.data.split("_")[1])  # Извлекаем user_id из callback_data
+        await callback.answer("✅ Оплата подтверждена")  # Отправляем ответ на нажатие кнопки
 
+        # Отправляем пользователю инструкцию по UDID
         await bot.send_message(user_id, UDID_INSTRUCTION)
+
+        # Уведомление админу
         await bot.send_message(ADMIN_ID, f"✅ Оплата подтверждена для пользователя ID: {user_id}")
 
     except Exception as e:
         await callback.answer(f"❌ Ошибка: {e}")
+        print(f"Ошибка в обработке: {e}")
 
 # ================= UDID =================
 @dp.message(lambda m: m.text and len(m.text) > 20 and " " not in m.text)
