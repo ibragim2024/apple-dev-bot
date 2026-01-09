@@ -82,13 +82,24 @@ async def pay_info(message: types.Message):
 
 @dp.message(lambda m: m.text == "💳 Я оплатил")
 async def paid(message: types.Message):
+    user = message.from_user
+
+    # Сообщение админу
+    await bot.send_message(
+        ADMIN_ID,
+        f"💰 *НОВАЯ ОПЛАТА*\n\n"
+        f"👤 Пользователь: @{user.username or 'без username'}\n"
+        f"🆔 ID: {user.id}\n"
+        f"📛 Имя: {user.full_name}"
+    )
+
+    # Ответ клиенту
     await message.answer(
         "✅ *Спасибо!*\n\n"
         "Я передал информацию администратору.\n"
         "Он скоро с вами свяжется 👇\n\n"
         f"{ADMIN_USERNAME}"
     )
-
 @dp.message(lambda m: m.text in ["⬅️ Назад", "⬅️ Назад к выбору"])
 async def back(message: types.Message):
     await message.answer(
