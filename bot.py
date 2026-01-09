@@ -8,8 +8,7 @@ from aiogram.types import (
 
 # ================= НАСТРОЙКИ =================
 BOT_TOKEN = "7989675191:AAFnkhfIaZRrDh4LBIpYyZkoYTQOmzgrRso"
-
-ADMIN_ID = 7621656595  # <-- ВСТАВЬ СВОЙ TELEGRAM ID (число)
+ADMIN_ID = 7621656595  # <-- ВСТАВЬ СВОЙ TELEGRAM ID (цифры)
 ADMIN_USERNAME = "@Ibracc7"
 
 # ================= ТЕКСТЫ =================
@@ -51,7 +50,7 @@ CARD_TEXT = (
 
 WAIT_SCREENSHOT_TEXT = (
     "✅ *Отлично!*\n\n"
-    "📸 Отправьте скриншот оплаты\n"
+    "📸 Отправьте *скриншот оплаты*\n"
     "⏱ Проверка занимает 1–5 минут"
 )
 
@@ -60,7 +59,7 @@ UDID_INSTRUCTION = (
     "📱 *Теперь отправьте UDID*\n\n"
     "1️⃣ Перейдите 👉 https://udid.tech\n"
     "2️⃣ Нажмите *Get UDID*\n"
-    "3️⃣ Разрешите профиль\n"
+    "3️⃣ Разрешите установку профиля\n"
     "4️⃣ Скопируйте UDID и отправьте сюда\n\n"
     "🎥 Видео-инструкция:\n"
     "https://youtube.com/shorts/xQ_xSXjtm-4\n\n"
@@ -78,7 +77,7 @@ CERT_READY_TEXT = (
     "Спасибо за покупку ❤️"
 )
 
-# ================= BOT =================
+# ================= БОТ =================
 bot = Bot(token=BOT_TOKEN, parse_mode="Markdown")
 dp = Dispatcher()
 
@@ -111,7 +110,7 @@ def pay_menu():
         resize_keyboard=True
     )
 
-# ================= START =================
+# ================= СТАРТ =================
 @dp.message(Command("start"))
 async def start(message: types.Message):
     await message.answer(START_TEXT, reply_markup=main_menu())
@@ -161,9 +160,15 @@ async def receive_screenshot(message: types.Message):
 # ================= ПОДТВЕРЖДЕНИЕ =================
 @dp.callback_query(lambda c: c.data.startswith("confirm_"))
 async def confirm_payment(callback: types.CallbackQuery):
-    user_id = int(callback.data.split("_")[1])
-    await bot.send_message(user_id, UDID_INSTRUCTION)
-    await callback.answer("Оплата подтверждена")
+    try:
+        user_id = int(callback.data.split("_")[1])
+        await callback.answer("✅ Оплата подтверждена")
+
+        await bot.send_message(user_id, UDID_INSTRUCTION)
+        await bot.send_message(ADMIN_ID, f"✅ Оплата подтверждена для пользователя ID: {user_id}")
+
+    except Exception as e:
+        await callback.answer(f"❌ Ошибка: {e}")
 
 # ================= UDID =================
 @dp.message(lambda m: m.text and len(m.text) > 20 and " " not in m.text)
@@ -172,13 +177,11 @@ async def receive_udid(message: types.Message):
 
     await bot.send_message(
         ADMIN_ID,
-        (
-            "📱 *UDID ПОЛУЧЕН*\n\n"
-            f"👤 @{user.username or 'без username'}\n"
-            f"🆔 {user.id}\n"
-            f"📛 {user.full_name}\n\n"
-            f"`{message.text}`"
-        ),
+        f"📱 *UDID ПОЛУЧЕН*\n\n"
+        f"👤 @{user.username or 'без username'}\n"
+        f"🆔 {user.id}\n"
+        f"📛 {user.full_name}\n\n"
+        f"`{message.text}`",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(
                 text="📦 Сертификат выдан",
@@ -196,7 +199,7 @@ async def certificate_ready(callback: types.CallbackQuery):
     await bot.send_message(user_id, CERT_READY_TEXT)
     await callback.answer("Готово")
 
-# ================= RUN =================
+# ================= ЗАПУСК =================
 async def main():
     print("Бот запущен и работает")
     await dp.start_polling(bot)
